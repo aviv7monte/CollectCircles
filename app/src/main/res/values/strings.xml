@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">CollectCircles</string>
+    <string name="game_title">Speed Collector</string>
+    <string name="elapsed_time_initial">Time: 0.000 s</string>
+    <string name="best_time_initial">Best: —</string>
+    <string name="start">Start</string>
 </resources>
