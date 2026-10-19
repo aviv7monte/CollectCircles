@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
+import  android.view.MotionEvent;
 
 import androidx.core.content.ContextCompat;
 
@@ -12,8 +13,7 @@ import androidx.core.content.ContextCompat;
 public class GameBoardView extends View {
     private static final float TARGET_RADIUS_DP = 64f;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private Target target;
-    private Circle[] previewCircles = new Circle[0];
+    private Game game;
 
     /**
      * יוצר לוח משחק מתוך קוד Java.
@@ -58,29 +58,21 @@ public class GameBoardView extends View {
     @Override
     protected void onSizeChanged(int width, int height,
                                  int oldWidth, int oldHeight) {
-        float centerX = width / 2f;
-        float centerY = height / 2f;
+        super.onSizeChanged(width, height, oldWidth, oldHeight);
+
         float targetRadius = Math.min(
-                dp(64f),
+                dp(TARGET_RADIUS_DP),
                 Math.min(width, height) / 5f
         );
-        float circleRadius = targetRadius / 2f;
-
-        target = new Target(
-                centerX, centerY, targetRadius,
+        game = new Game(
+                width,
+                height,
+                targetRadius,
                 color(R.color.target_red),
                 color(R.color.target_cross),
-                dp(2f)
+                dp(2f),
+                color(R.color.circle_green)
         );
-
-        previewCircles = new Circle[] {
-                new Circle(circleRadius * 1.5f, circleRadius * 1.5f,
-                        circleRadius, color(R.color.circle_green)),
-                new Circle(width - circleRadius * 1.5f, circleRadius * 2.2f,
-                        circleRadius, color(R.color.circle_green)),
-                new Circle(circleRadius * 1.8f, height - circleRadius * 1.7f,
-                        circleRadius, color(R.color.circle_green))
-        };
     }
 
     /**
@@ -91,14 +83,12 @@ public class GameBoardView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (target == null) {
+
+        if (game == null) {
             return;
         }
 
-        target.draw(canvas, paint);
-        for (Circle circle : previewCircles) {
-            circle.draw(canvas, paint);
-        }
+        game.draw(canvas, paint);
     }
 
     /**
@@ -119,5 +109,62 @@ public class GameBoardView extends View {
      */
     private int color(int colorResource) {
         return ContextCompat.getColor(getContext(), colorResource);
+    }
+
+
+    /**
+     * מטפל בבחירה, בגרירה ובשחרור של עיגול באמצעות אירועי מגע.
+     *
+     * @param event אירוע המגע שסיפקה מערכת Android
+     * @return {@code true} אם הלוח טיפל באירוע
+     */
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (game == null) {
+            return false;
+        }
+
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                boolean selected =
+                        game.selectCircleAt(event.getX(), event.getY());
+                if (selected) {
+                    getParent().requestDisallowInterceptTouchEvent(true);
+                }
+                return selected;
+
+            case MotionEvent.ACTION_MOVE:
+                game.moveSelectedCircle(event.getX(), event.getY());
+                invalidate();
+                return true;
+
+            case MotionEvent.ACTION_UP:
+                game.moveSelectedCircle(event.getX(), event.getY());
+                game.releaseSelectedCircle();
+                getParent().requestDisallowInterceptTouchEvent(false);
+                invalidate();
+                performClick();
+                return true;
+
+            case MotionEvent.ACTION_CANCEL:
+                game.cancelSelection();
+                getParent().requestDisallowInterceptTouchEvent(false);
+                invalidate();
+                return true;
+
+            default:
+                return super.onTouchEvent(event);
+        }
+    }
+
+    /**
+            * מדווח לכלי הנגישות שהלחיצה על הלוח הושלמה.
+ *
+         * @return תמיד {@code true}, מפני שהלחיצה טופלה
+ */
+    @Override
+    public boolean performClick() {
+        super.performClick();
+        return true;
     }
 }
