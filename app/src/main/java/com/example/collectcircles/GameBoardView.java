@@ -15,6 +15,17 @@ public class GameBoardView extends View {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Game game;
 
+
+    private Runnable onGameFinished;
+
+    /**
+     * מגדיר פעולה שתופעל לאחר איסוף העיגול האחרון.
+     *
+     * @param listener הפעולה שתופעל בסיום המשחק, או {@code null} להסרתה
+     */
+    public void setOnGameFinishedListener(Runnable listener) {
+        onGameFinished = listener;
+    }
     /**
      * יוצר לוח משחק מתוך קוד Java.
      *
@@ -55,26 +66,30 @@ public class GameBoardView extends View {
      * @param oldWidth רוחב הלוח הקודם בפיקסלים
      * @param oldHeight גובה הלוח הקודם בפיקסלים
      */
-    @Override
-    protected void onSizeChanged(int width, int height,
-                                 int oldWidth, int oldHeight) {
-        super.onSizeChanged(width, height, oldWidth, oldHeight);
+    /**
+     * מתחיל סיבוב חדש לפי הגודל הנוכחי של לוח המשחק.
+     * אם הלוח עדיין לא נמדד, הפעולה אינה משנה את המשחק.
+     */
+    public void startNewGame() {
+        if (getWidth() == 0 || getHeight() == 0) {
+            return;
+        }
 
         float targetRadius = Math.min(
                 dp(TARGET_RADIUS_DP),
-                Math.min(width, height) / 5f
+                Math.min(getWidth(), getHeight()) / 5f
         );
         game = new Game(
-                width,
-                height,
+                getWidth(),
+                getHeight(),
                 targetRadius,
                 color(R.color.target_red),
                 color(R.color.target_cross),
                 dp(2f),
                 color(R.color.circle_green)
         );
+        invalidate();
     }
-
     /**
      * מצייר את המטרה ואת עיגולי הדוגמה על הלוח.
      *
@@ -140,10 +155,15 @@ public class GameBoardView extends View {
 
             case MotionEvent.ACTION_UP:
                 game.moveSelectedCircle(event.getX(), event.getY());
-                game.releaseSelectedCircle();
+                boolean collected = game.releaseSelectedCircle();
                 getParent().requestDisallowInterceptTouchEvent(false);
                 invalidate();
                 performClick();
+                if (collected
+                        && game.isFinished()
+                        && onGameFinished != null) {
+                    onGameFinished.run();
+                }
                 return true;
 
             case MotionEvent.ACTION_CANCEL:
