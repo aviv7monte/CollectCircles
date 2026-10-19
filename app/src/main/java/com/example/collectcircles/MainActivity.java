@@ -1,8 +1,13 @@
 package com.example.collectcircles;
 
 import android.os.Bundle;
-
+import android.widget.Toast;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.Manifest;
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -14,9 +19,10 @@ import android.os.SystemClock;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-public class MainActivity extends AppCompatActivity {
+public class    MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
     private static final String PREFERENCES_NAME =
             "collect_circles_preferences";
     private static final String BEST_TIME_KEY = "best_time_millis";
@@ -44,6 +50,25 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
         );
 
         // ממשיכים בתוך onCreate, אבל מחוץ ל-listener של ה-insets.
+        // החל מ-Android 13 צריך אישור מפורש כדי להציג התראות.
+        notificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                permissionGranted -> {     // callback כאן מוצהר מנגנון
+                    // זוהי פונקציה אנונימית - קטע קוד ללא שם - שאנחנו מבקשים שירוץ
+                    if (permissionGranted) {
+                        Notifications.show(this);
+                    } else {
+                        Toast.makeText(
+                                this,
+                                R.string.notification_permission_denied,
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                }
+        );
+
+
+        // ממשיכים בתוך onCreate, אבל מחוץ ל-listener של ה-insets.
         preferences = getSharedPreferences(
                 PREFERENCES_NAME,
                 MODE_PRIVATE
@@ -55,6 +80,9 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
         showBestTime();
 
         binding.startButton.setOnClickListener(view -> startGame());
+        binding.localNotifButton.setOnClickListener(
+                view -> requestPermissionAndShowNotification()
+        );
         binding.gameBoard.setOnGameFinishedListener(this::finishGame);
 
 
@@ -65,6 +93,21 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
     /**
             * יוצר סיבוב חדש, מאפס את זמן ההתחלה ומפעיל שרשרת רענון יחידה.
             */
+
+    private void requestPermissionAndShowNotification() {
+        // ב-Android 12 ומטה אין הרשאת התראות בזמן ריצה
+        // ב-Android 13 מבקשים אותה אם עדיין לא ניתנה
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            return; // Notifications.show כלומר, אם עכשיו שלחנו בקשה לא נמשיך לשורה של ה
+        }
+
+        Notifications.show(this); // מציג התראות רק אם זו לא הלחיצה הראשונה
+        // המופיע למעלה במדריך callback בלחיצה הראשונה תתקבל ההתראה בזכות מנגנון
+    }
+
     private void startGame() {
         binding.gameBoard.startNewGame();
         gameStartTimeMillis = SystemClock.elapsedRealtime();

@@ -71,7 +71,18 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/startButton"
+        app:layout_constraintTop_toBottomOf="@id/localNotifButton"
         tools:background="@color/board_background" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/localNotifButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/local_notification"
+        app:cornerRadius="14dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/startButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
