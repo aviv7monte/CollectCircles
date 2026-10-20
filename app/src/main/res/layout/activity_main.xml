@@ -71,7 +71,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/localNotifButton"
+        app:layout_constraintTop_toBottomOf="@id/inviteButton"
         tools:background="@color/board_background" />
 
     <com.google.android.material.button.MaterialButton
@@ -84,5 +84,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/startButton" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/inviteButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/invite"
+        app:cornerRadius="14dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/localNotifButton" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

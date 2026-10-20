@@ -12,10 +12,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.example.collectcircles.databinding.ActivityMainBinding;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
+import com.google.firebase.functions.FirebaseFunctions;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -67,6 +68,13 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
                 }
         );
 
+        // הרשמה ראשונה לשני ה-topics. הרשמה חוזרת אינה יוצרת מנוי כפול.
+        FirebaseMessaging.getInstance().subscribeToTopic(
+                CircleMessagingService.DATA_TOPIC
+        );
+        FirebaseMessaging.getInstance().subscribeToTopic(
+                CircleMessagingService.NOTIFICATION_TOPIC
+        );
 
         // ממשיכים בתוך onCreate, אבל מחוץ ל-listener של ה-insets.
         preferences = getSharedPreferences(
@@ -83,12 +91,28 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
         binding.localNotifButton.setOnClickListener(
                 view -> requestPermissionAndShowNotification()
         );
+        binding.inviteButton.setOnClickListener(view -> sendInvite());
         binding.gameBoard.setOnGameFinishedListener(this::finishGame);
 
 
 
 
     }
+    private void sendInvite() {
+        binding.inviteButton.setEnabled(false);
+
+        FirebaseFunctions.getInstance()
+                .getHttpsCallable("sendCircleInvite")
+                .call()
+                .addOnCompleteListener(task -> {
+                    binding.inviteButton.setEnabled(true);
+                    int message = task.isSuccessful()
+                            ? R.string.invite_sent
+                            : R.string.invite_failed;
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                });
+    }
+
 
     /**
             * יוצר סיבוב חדש, מאפס את זמן ההתחלה ומפעיל שרשרת רענון יחידה.

@@ -18,4 +18,7 @@
     <string name="notification_title">Collect Circles</string>
     <string name="notification_text">Come collect circles with me!</string>
     <string name="notification_permission_denied">Notification permission is required</string>
+    <string name="invite">Invite</string>
+    <string name="invite_sent">Invitation sent</string>
+    <string name="invite_failed">Invitation could not be sent</string>
 </resources>

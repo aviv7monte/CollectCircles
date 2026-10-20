@@ -11,6 +11,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CollectCircles">
+        <!-- Lesson 5 created this channel for Notifications.show(). -->
+        <!-- Without this default, background FCM uses its own fallback channel. -->
+        <!-- Our channel's name, sound, and importance settings would not apply. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="circle_invitations" />
+
+        <!-- Enable registration callbacks based on Firebase Installation ID. -->
+        <meta-data
+            android:name="firebase_messaging_installation_id_enabled"
+            android:value="true" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -21,6 +33,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Register our service for messages that FCM delivers to app code. -->
+        <!-- exported=false prevents other apps from starting it directly. -->
+        <service
+            android:name=".CircleMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <!-- Route incoming FCM messages to this service. -->
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
