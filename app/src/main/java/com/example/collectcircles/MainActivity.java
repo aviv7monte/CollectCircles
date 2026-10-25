@@ -112,7 +112,7 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
         gameProgress.recordCollectedCircle();
         showProgress();
     }
-
+//
     private void showProgress() {
         // getString טוענת את תבנית הטקסט circles_balance_format מתוך strings.xml.
         // הארגומנט השני מחליף את %1$d שבתבנית בערך המספרי של היתרה.
