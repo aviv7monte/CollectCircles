@@ -3,6 +3,7 @@ package com.example.collectcircles;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.View;
 import  android.view.MotionEvent;
@@ -18,6 +19,11 @@ public class GameBoardView extends View {
     private Runnable onCircleCollected;
     private Runnable onGameFinished;
 
+    // True while the Auto frame callback should keep scheduling itself.
+    private boolean autonomousRunning;
+    // Timestamp of the previous frame, used to measure real elapsed time.
+    private long previousFrameMillis;
+
     public void setOnCircleCollectedListener(Runnable listener) {
         onCircleCollected = listener;
     }
@@ -27,6 +33,8 @@ public class GameBoardView extends View {
      *
      * @param listener הפעולה שתופעל בסיום המשחק, או {@code null} להסרתה
      */
+
+
     public void setOnGameFinishedListener(Runnable listener) {
         onGameFinished = listener;
     }
@@ -71,29 +79,96 @@ public class GameBoardView extends View {
      * @param oldHeight גובה הלוח הקודם בפיקסלים
      */
     /**
-     * מתחיל סיבוב חדש לפי הגודל הנוכחי של לוח המשחק.
-     * אם הלוח עדיין לא נמדד, הפעולה אינה משנה את המשחק.
+     * מתחיל משחק מתוזמן ועוצר לולאת פריימים אוטונומית קודמת.
      */
     public void startNewGame() {
+        stopAutonomousFrames();
         if (getWidth() == 0 || getHeight() == 0) {
             return;
         }
 
-        float targetRadius = Math.min(
-                dp(TARGET_RADIUS_DP),
-                Math.min(getWidth(), getHeight()) / 5f
-        );
-        game = new Game(
+        game = createGame(calculateTargetRadius(), false);
+        invalidate();
+    }
+
+
+
+    /**
+     * Builds either game mode with the same board measurements and colors.
+     */
+    private Game createGame(float targetRadius, boolean autonomous) {
+        return new Game(
                 getWidth(),
                 getHeight(),
                 targetRadius,
                 color(R.color.target_red),
                 color(R.color.target_cross),
                 dp(2f),
-                color(R.color.circle_green)
+                color(R.color.circle_green),
+                autonomous
         );
+    }
+
+    /**
+     * Creates a fresh Auto game and starts its frame loop.
+     */
+    public void startAutonomousGame() {
+        if (getWidth() == 0 || getHeight() == 0) {
+            return;
+        }
+
+        float targetRadius = calculateTargetRadius();
+        game = createGame(targetRadius, true);
+        resumeAutonomousGame();
         invalidate();
     }
+
+    /**
+     * Resumes frame updates without replacing the current game.
+     */
+    public void resumeAutonomousGame() {
+        if (game == null || autonomousRunning) {
+            return;
+        }
+        autonomousRunning = true;
+        previousFrameMillis = SystemClock.elapsedRealtime();
+        postOnAnimation(autonomousFrame);
+    }
+
+    /**
+     * Pauses frame updates while preserving the current game.
+     */
+    public void pauseAutonomousGame() {
+        stopAutonomousFrames();
+    }
+
+    /**
+     * Stops all updates and removes the current game from the board.
+     */
+    public void clearGame() {
+        stopAutonomousFrames();
+        game = null;
+        invalidate();
+    }
+
+    /**
+     * Cancels the scheduled callback so only one Auto loop can exist.
+     */
+    private void stopAutonomousFrames() {
+        autonomousRunning = false;
+        removeCallbacks(autonomousFrame);
+    }
+
+    /**
+     * Calculates the target size shared by timed and Auto games.
+     */
+    private float calculateTargetRadius() {
+        return Math.min(
+                dp(TARGET_RADIUS_DP),
+                Math.min(getWidth(), getHeight()) / 5f
+        );
+    }
+
     /**
      * מצייר את המטרה ואת עיגולי הדוגמה על הלוח.
      *
@@ -194,4 +269,27 @@ public class GameBoardView extends View {
         super.performClick();
         return true;
     }
+
+
+
+    // Repeats once per display frame while Auto mode is running.
+    private final Runnable autonomousFrame = new Runnable() {
+        /**
+         * Advances the model by one frame and requests the next drawing pass.
+         */
+        @Override
+        public void run() {
+            if (!autonomousRunning || game == null) {
+                return;
+            }
+
+            long nowMillis = SystemClock.elapsedRealtime();
+            double elapsedSeconds = (nowMillis - previousFrameMillis) / 1000.0;
+            previousFrameMillis = nowMillis;
+
+            game.update(elapsedSeconds, getWidth(), getHeight(), color(R.color.circle_green));
+            invalidate();
+            postOnAnimation(this);
+        }
+    };
 }

@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * Example local unit test, which will execute on the development machine (host).
  *
@@ -14,4 +16,39 @@ public class ExampleUnitTest {
     public void addition_isCorrect() {
         assertEquals(4, 2 + 2);
     }
+
+    /**
+     * Verifies the Auto spawn rate and the maximum on-screen circle count.
+     */
+    @Test
+    public void autonomousGameSpawnsSlowlyAndStopsAtTheScreenCap() {
+        Game game = new Game(1000, 1000, 100,
+                0, 0, 1, 0, true);
+
+        assertEquals(3, game.getCircleCount());
+
+        game.update(5.1, 1000, 1000, 0);
+        assertEquals(4, game.getCircleCount());
+
+        game.update(1000, 1000, 1000, 0);
+        assertEquals(Game.MAX_CIRCLE_COUNT, game.getCircleCount());
+    }
+
+
+
+    /**
+     * Verifies that elapsed time does not add circles to a timed game.
+     */
+    @Test
+    public void timedGameDoesNotSpawnMoreCircles() {
+        Game game = new Game(1000, 1000, 100,
+                0, 0, 1, 0, false);
+
+        game.update(1000, 1000, 1000, 0);
+
+        assertEquals(5, game.getCircleCount());
+    }
+
+
 }
+

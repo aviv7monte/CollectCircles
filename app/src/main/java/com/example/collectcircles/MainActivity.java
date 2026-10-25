@@ -90,6 +90,12 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
         );
         showBestTime();
         showProgress();
+
+        // Restore the saved switch position before attaching its listener.
+        binding.autonomousSwitch.setChecked(gameProgress.isAutonomousMode());
+// Build the screen that matches the restored mode.
+        showSelectedGameMode();
+
         binding.startButton.setOnClickListener(view -> startGame());
         binding.localNotifButton.setOnClickListener(
                 view -> requestPermissionAndShowNotification()
@@ -100,11 +106,42 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
 
 
 
+        // Persist mode changes and immediately rebuild the game screen.
+        binding.autonomousSwitch.setOnCheckedChangeListener((button, enabled) -> {
+            gameProgress.setAutonomousMode(enabled);
+            showSelectedGameMode();
+        });
+
+
 
     }
 
 
+    /**
+     * Stops the previous mode and configures the selected game mode.
+     */
+    private void showSelectedGameMode() {
+        // Removes every queued execution of this exact Runnable from the View's message queue.
+        // This stops future timer updates but does not delete or disable timerUpdate,
+        // so the same Runnable can be started again later with timerUpdate.run().
+        binding.elapsedTimeText.removeCallbacks(timerUpdate);
+        gameRunning = false;
 
+        if (gameProgress.isAutonomousMode()) {
+            binding.startButton.setEnabled(false);
+            binding.elapsedTimeText.setText(R.string.autonomous_time);
+            // Wait until GameBoardView has valid width and height measurements.
+            binding.gameBoard.post(() -> {
+                if (gameProgress.isAutonomousMode()) {
+                    binding.gameBoard.startAutonomousGame();
+                }
+            });
+        } else {
+            binding.startButton.setEnabled(true);
+            binding.elapsedTimeText.setText(R.string.elapsed_time_initial);
+            binding.gameBoard.clearGame();
+        }
+    }
 
 
 
@@ -277,21 +314,29 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
     /**
      * מפעיל מחדש את רענון הזמן כאשר הפעילות חוזרת למסך.
      */
+
+    /**
+     * Resumes the update loop that belongs to the selected game mode.
+     */
     @Override
     protected void onStart() {
         super.onStart();
-        if (gameRunning) {
+        // Resume only the loop that belongs to the selected game mode.
+        if (gameProgress.isAutonomousMode()) {
+            binding.gameBoard.resumeAutonomousGame();
+        } else if (gameRunning) {
             binding.elapsedTimeText.removeCallbacks(timerUpdate);
             timerUpdate.run();
         }
     }
 
     /**
-     * מסיר עדכוני זמן מתוזמנים כאשר הפעילות אינה גלויה.
+     * Stops both update loops while the Activity is not visible.
      */
     @Override
     protected void onStop() {
         binding.elapsedTimeText.removeCallbacks(timerUpdate);
+        binding.gameBoard.pauseAutonomousGame();
         super.onStop();
     }
 }

@@ -9,12 +9,26 @@ import java.util.Random;
 
 
 public class Game {
-    private static final int CIRCLE_COUNT = 5;
+    // Number of circles created for a regular timed game.
+    private static final int TIMED_CIRCLE_COUNT = 5;
+    // Number of circles shown when Auto mode starts.
+    private static final int AUTONOMOUS_STARTING_CIRCLE_COUNT = 3;
+    // Maximum number of circles allowed on the board at once.
+    static final int MAX_CIRCLE_COUNT = 12;
+    // Fraction of a new circle earned during one second of Auto mode.
+    static final double AUTONOMOUS_SPAWN_RATE = 0.20;
+
 
     private final Random random = new Random();
     private final Target target;
     private final List<Circle> circles = new ArrayList<>();
+
+
+    // True when this model represents an endless Auto game.
+    private final boolean autonomous;
     private Circle selectedCircle;
+    // Stores partial spawn progress until it reaches one complete circle.
+    private double spawnProgress;
 
     /**
      * יוצר משחק חדש וממקם בו מטרה ועיגולים אקראיים.
@@ -27,9 +41,15 @@ public class Game {
      * @param crossStrokeWidth עובי קווי הצלב
      * @param circleColor צבע העיגולים שאוספים
      */
+
+    /**
+     * Creates a timed or Auto game with the correct number of starting circles.
+     */
     public Game(float boardWidth, float boardHeight, float targetRadius,
                 int targetColor, int crossColor, float crossStrokeWidth,
-                int circleColor) {
+                int circleColor, boolean autonomous) {
+        // Keep the selected mode for update() and isFinished().
+        this.autonomous = autonomous;
         target = new Target(
                 boardWidth / 2f,
                 boardHeight / 2f,
@@ -39,7 +59,10 @@ public class Game {
                 crossStrokeWidth
         );
 
-        createCircles(boardWidth, boardHeight, circleColor);
+        int startingCircleCount = autonomous
+                ? AUTONOMOUS_STARTING_CIRCLE_COUNT
+                : TIMED_CIRCLE_COUNT;
+        createCircles(startingCircleCount, boardWidth, boardHeight, circleColor);
     }
 
     /**
@@ -115,8 +138,12 @@ public class Game {
     /**
      * @return {@code true} אם כל העיגולים נאספו
      */
+
+    /**
+     * Reports completion only for an empty timed game; Auto never ends itself.
+     */
     public boolean isFinished() {
-        return circles.isEmpty();
+        return !autonomous && circles.isEmpty();
     }
 
     /**
@@ -126,11 +153,14 @@ public class Game {
      * @param boardHeight גובה לוח המשחק בפיקסלים
      * @param circleColor צבע העיגולים
      */
-    private void createCircles(float boardWidth, float boardHeight,
-                               int circleColor) {
+    /**
+     * Adds non-overlapping circles until the requested amount is reached.
+     */
+    private void createCircles(int requestedCount, float boardWidth,
+                               float boardHeight, int circleColor) {
         float circleRadius = target.getRadius() / 2f;
 
-        while (circles.size() < CIRCLE_COUNT) {
+        while (circles.size() < requestedCount) {
             float x = randomCoordinate(
                     circleRadius,
                     boardWidth - circleRadius
@@ -147,7 +177,38 @@ public class Game {
             }
         }
     }
+    /**
+     * מעדכן את יצירת העיגולים במצב Auto לפי הזמן שעבר ומגבלת הלוח.
+     *
+     * @param elapsedSeconds הזמן שעבר מאז העדכון הקודם, בשניות
+     * @param boardWidth רוחב לוח המשחק בפיקסלים
+     * @param boardHeight גובה לוח המשחק בפיקסלים
+     * @param circleColor צבע העיגולים החדשים
+     */
+    public void update(double elapsedSeconds, float boardWidth,
+                       float boardHeight, int circleColor) {
+        if (!autonomous) {
+            return;
+        }
 
+        spawnProgress += elapsedSeconds * AUTONOMOUS_SPAWN_RATE;
+        while (spawnProgress >= 1.0 && circles.size() < MAX_CIRCLE_COUNT) {
+            createCircles(circles.size() + 1, boardWidth, boardHeight, circleColor);
+            spawnProgress -= 1.0;
+        }
+
+        if (circles.size() == MAX_CIRCLE_COUNT) {
+            spawnProgress = Math.min(spawnProgress, 1.0);
+        }
+    }
+
+
+    /**
+     * Returns the number of circles currently on the board.
+     */
+    int getCircleCount() {
+        return circles.size();
+    }
     /**
      * בודק אם עיגול מועמד חופף למטרה או לעיגול קיים.
      *

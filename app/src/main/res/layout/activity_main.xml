@@ -97,18 +97,41 @@
 
     </LinearLayout>
 
+    <!-- מציג באותה שורה את כפתור Start ואת המתג למצב המשחק האוטונומי. -->
+    <LinearLayout
+        android:id="@+id/gameModeRow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressRow">
+
+
+
     <!-- מתחיל סבב משחק חדש ומפעיל את מדידת הזמן. -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/startButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
         android:text="@string/start"
         android:textSize="16sp"
-        app:cornerRadius="14dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressRow" />
+        app:cornerRadius="14dp" />
+
+        <!-- מפעיל או מכבה את מצב המשחק האוטונומי. -->
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/autonomousSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/autonomous_mode"
+            android:textColor="@color/title_purple"
+            android:textStyle="bold" />
+
+    </LinearLayout>
 
     <!-- מסדר את שני כפתורי ההתראות זה לצד זה וחוסך מקום אנכי. -->
     <LinearLayout
@@ -119,7 +142,7 @@
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/startButton">
+        app:layout_constraintTop_toBottomOf="@id/gameModeRow">>
 
         <!-- מבקש הרשאת התראות במידת הצורך ומציג התראה מקומית לבדיקה. -->
         <com.google.android.material.button.MaterialButton

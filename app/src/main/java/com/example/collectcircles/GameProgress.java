@@ -16,6 +16,11 @@ public class GameProgress {
     private long circlesBalance;
     private long lifetimeCircles;
     private int pusherCount;
+    // Key used to persist the selected game mode in SharedPreferences.
+    private static final String AUTONOMOUS_MODE_KEY = "autonomous_mode";
+
+    // Cached mode used by the current screen.
+    private boolean autonomousMode;
 
     public GameProgress(SharedPreferences preferences) {
         this.preferences = preferences;
@@ -24,6 +29,28 @@ public class GameProgress {
         circlesBalance = preferences.getLong(CIRCLES_BALANCE_KEY, 0);
         lifetimeCircles = preferences.getLong(LIFETIME_CIRCLES_KEY, 0);
         pusherCount = preferences.getInt(PUSHER_COUNT_KEY, 0);
+
+
+
+        autonomousMode = preferences.getBoolean(AUTONOMOUS_MODE_KEY, false);
+    }
+
+
+    /**
+     * Returns the game mode currently selected by the player.
+     */
+    public boolean isAutonomousMode() {
+        return autonomousMode;
+    }
+
+    /**
+     * Updates the selected mode and saves it for the next app launch.
+     */
+    public void setAutonomousMode(boolean autonomousMode) {
+        this.autonomousMode = autonomousMode;
+        preferences.edit()
+                .putBoolean(AUTONOMOUS_MODE_KEY, autonomousMode)
+                .apply();
     }
 
     // מחזיר את מספר העיגולים שאפשר יהיה להוציא על קניות.

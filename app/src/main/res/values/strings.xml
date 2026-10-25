@@ -29,4 +29,6 @@
     <string name="lifetime_circles_format">Lifetime: %1$d</string>
     <string name="pushers_format">Pushers: %1$d</string>
     <string name="local_notification_short">Local notification</string>
+    <string name="autonomous_mode">Auto</string>
+    <string name="autonomous_time">Time: autonomous</string>
 </resources>
