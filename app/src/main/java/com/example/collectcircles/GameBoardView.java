@@ -15,8 +15,12 @@ public class GameBoardView extends View {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Game game;
 
-
+    private Runnable onCircleCollected;
     private Runnable onGameFinished;
+
+    public void setOnCircleCollectedListener(Runnable listener) {
+        onCircleCollected = listener;
+    }
 
     /**
      * מגדיר פעולה שתופעל לאחר איסוף העיגול האחרון.
@@ -159,6 +163,9 @@ public class GameBoardView extends View {
                 getParent().requestDisallowInterceptTouchEvent(false);
                 invalidate();
                 performClick();
+                if (collected && onCircleCollected != null) {
+                    onCircleCollected.run();
+                }
                 if (collected
                         && game.isFinished()
                         && onGameFinished != null) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- מיכל המסך הראשי: ממקם את כל הרכיבים זה ביחס לזה בעזרת אילוצים. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -10,6 +10,7 @@
     android:paddingHorizontal="20dp"
     tools:context=".MainActivity">
 
+    <!-- מציג את שם המשחק בראש המסך. -->
     <TextView
         android:id="@+id/titleText"
         android:layout_width="0dp"
@@ -24,6 +25,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- מציג את הזמן שחלף מאז תחילת הסבב הנוכחי. -->
     <TextView
         android:id="@+id/elapsedTimeText"
         android:layout_width="0dp"
@@ -37,6 +39,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/titleText" />
 
+    <!-- מציג את זמן השיא שנשמר מהסבבים הקודמים. -->
     <TextView
         android:id="@+id/bestTimeText"
         android:layout_width="0dp"
@@ -49,18 +52,102 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/elapsedTimeText" />
 
+    <!-- מסדר את שלושת מוני ההתקדמות זה לצד זה בשורה אחת. -->
+    <LinearLayout
+        android:id="@+id/progressRow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/elapsedTimeText">
+
+        <!-- מציג את יתרת העיגולים הזמינה לקניות עתידיות. -->
+        <TextView
+            android:id="@+id/circlesBalanceText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="start"
+            android:text="@string/circles_balance_initial"
+            android:textColor="@color/title_purple"
+            android:textStyle="bold" />
+
+        <!-- מציג כמה עיגולים נאספו בסך הכול מאז תחילת המשחק. -->
+        <TextView
+            android:id="@+id/lifetimeCirclesText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/lifetime_circles_initial"
+            android:textColor="@color/time_brown" />
+
+        <!-- מציג את מספר העובדים שנרכשו; בפרק הזה הערך עדיין אפס. -->
+        <TextView
+            android:id="@+id/pushersText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:text="@string/pushers_initial"
+            android:textColor="@color/title_purple" />
+
+    </LinearLayout>
+
+    <!-- מתחיל סבב משחק חדש ומפעיל את מדידת הזמן. -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/startButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="@string/start"
-        android:textSize="18sp"
+        android:textSize="16sp"
         app:cornerRadius="14dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/elapsedTimeText" />
+        app:layout_constraintTop_toBottomOf="@id/progressRow" />
 
+    <!-- מסדר את שני כפתורי ההתראות זה לצד זה וחוסך מקום אנכי. -->
+    <LinearLayout
+        android:id="@+id/notificationActionsRow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/startButton">
+
+        <!-- מבקש הרשאת התראות במידת הצורך ומציג התראה מקומית לבדיקה. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/localNotifButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:text="@string/local_notification_short"
+            android:textSize="12sp"
+            app:cornerRadius="12dp" />
+
+        <!-- שולח דרך Firebase הזמנה למכשיר אחר שהתקין את המשחק. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/inviteButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:text="@string/invite"
+            android:textSize="12sp"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
+
+    <!-- משטח המשחק המותאם אישית, שמצייר את העיגולים ומטפל בגרירתם. -->
     <com.example.collectcircles.GameBoardView
         android:id="@+id/gameBoard"
         android:layout_width="0dp"
@@ -71,30 +158,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/inviteButton"
+        app:layout_constraintTop_toBottomOf="@id/notificationActionsRow"
         tools:background="@color/board_background" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/localNotifButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/local_notification"
-        app:cornerRadius="14dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/startButton" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/inviteButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/invite"
-        app:cornerRadius="14dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/localNotifButton" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

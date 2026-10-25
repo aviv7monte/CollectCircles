@@ -35,6 +35,8 @@ public class    MainActivity extends AppCompatActivity {
     private long gameStartTimeMillis;
     private long bestTimeMillis;
 
+    private GameProgress gameProgress;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,23 +83,60 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
                 PREFERENCES_NAME,
                 MODE_PRIVATE
         );
+        gameProgress = new GameProgress(preferences);
         bestTimeMillis = preferences.getLong(
                 BEST_TIME_KEY,
                 NO_BEST_TIME
         );
         showBestTime();
-
+        showProgress();
         binding.startButton.setOnClickListener(view -> startGame());
         binding.localNotifButton.setOnClickListener(
                 view -> requestPermissionAndShowNotification()
         );
         binding.inviteButton.setOnClickListener(view -> sendInvite());
+        binding.gameBoard.setOnCircleCollectedListener(this::recordCollectedCircle);
         binding.gameBoard.setOnGameFinishedListener(this::finishGame);
 
 
 
 
     }
+
+
+
+
+
+
+    private void recordCollectedCircle() {
+        gameProgress.recordCollectedCircle();
+        showProgress();
+    }
+
+    private void showProgress() {
+        // getString טוענת את תבנית הטקסט circles_balance_format מתוך strings.xml.
+        // הארגומנט השני מחליף את %1$d שבתבנית בערך המספרי של היתרה.
+        // את הטקסט המוכן מעבירים אל setText כדי לעדכן את ה-TextView.
+        binding.circlesBalanceText.setText(getString(
+                R.string.circles_balance_format,
+                gameProgress.getCirclesBalance()
+        ));
+
+        // באותה דרך מציגים את מספר העיגולים הכולל שנאסף.
+        binding.lifetimeCirclesText.setText(getString(
+                R.string.lifetime_circles_format,
+                gameProgress.getLifetimeCircles()
+        ));
+
+        // ולבסוף מציגים את מספר העובדים שנרכשו.
+        binding.pushersText.setText(getString(
+                R.string.pushers_format,
+                gameProgress.getPusherCount()
+        ));
+    }
+
+
+
     private void sendInvite() {
         binding.inviteButton.setEnabled(false);
 

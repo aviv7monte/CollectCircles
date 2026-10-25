@@ -21,4 +21,12 @@
     <string name="invite">Invite</string>
     <string name="invite_sent">Invitation sent</string>
     <string name="invite_failed">Invitation could not be sent</string>
+
+    <string name="circles_balance_initial">Circles: 0</string>
+    <string name="lifetime_circles_initial">Lifetime: 0</string>
+    <string name="pushers_initial">Pushers: 0</string>
+    <string name="circles_balance_format">Circles: %1$d</string>
+    <string name="lifetime_circles_format">Lifetime: %1$d</string>
+    <string name="pushers_format">Pushers: %1$d</string>
+    <string name="local_notification_short">Local notification</string>
 </resources>
