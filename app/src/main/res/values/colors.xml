@@ -9,5 +9,5 @@
     <color name="target_red">#E53935</color>
     <color name="target_cross">#FFFFFFFF</color>
     <color name="circle_green">#43A047</color>
-    <color name="pusher_blue">#C05F15</color>
+    <color name="pusher_blue">#1565C0</color>
 </resources>
