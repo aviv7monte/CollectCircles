@@ -23,7 +23,7 @@ public class ExampleUnitTest {
     @Test
     public void autonomousGameSpawnsSlowlyAndStopsAtTheScreenCap() {
         Game game = new Game(1000, 1000, 100,
-                0, 0, 1, 0, true);
+                0, 0, 1, 0, true,0,0);
 
         assertEquals(3, game.getCircleCount());
 
@@ -42,13 +42,12 @@ public class ExampleUnitTest {
     @Test
     public void timedGameDoesNotSpawnMoreCircles() {
         Game game = new Game(1000, 1000, 100,
-                0, 0, 1, 0, false);
+                0, 0, 1, 0, false,0,0);
 
         game.update(1000, 1000, 1000, 0);
 
         assertEquals(5, game.getCircleCount());
     }
-
 
     /**
      * Verifies that prices double and stop safely before long overflow.
@@ -59,6 +58,18 @@ public class ExampleUnitTest {
         assertEquals(128, GameProgress.priceForPusherCount(1));
         assertEquals(256, GameProgress.priceForPusherCount(2));
         assertEquals(Long.MAX_VALUE, GameProgress.priceForPusherCount(57));
+    }
+    /**
+     * Verifies that a long frame turns a Pusher around at the right edge.
+     */
+    @Test
+    public void pusherTurnsAroundAndStaysInsideTheBoard() {
+        Pusher pusher = new Pusher(90, 50, 40, 0, 0);
+
+        pusher.update(10, 100);
+
+        assertTrue(pusher.getCenterX() <= 90);
+        assertEquals(-1, pusher.getDirection());
     }
 
 }

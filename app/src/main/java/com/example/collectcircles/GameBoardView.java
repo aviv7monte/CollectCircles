@@ -87,16 +87,22 @@ public class GameBoardView extends View {
             return;
         }
 
-        game = createGame(calculateTargetRadius(), false);
+        game = createGame(calculateTargetRadius(), false, 0);
         invalidate();
     }
 
 
 
     /**
-     * Builds either game mode with the same board measurements and colors.
+     + * Builds either game mode with the same colors and requested Pusher count.
+     + *
+     + * @param targetRadius target radius, in pixels
+     + * @param autonomous whether to create an Auto game
+     + * @param pusherCount number of purchased Pushers to restore
+     + * @return a new game model sized for the current board
      */
-    private Game createGame(float targetRadius, boolean autonomous) {
+private Game createGame(float targetRadius, boolean autonomous,
+                        int pusherCount) {
         return new Game(
                 getWidth(),
                 getHeight(),
@@ -105,20 +111,24 @@ public class GameBoardView extends View {
                 color(R.color.target_cross),
                 dp(2f),
                 color(R.color.circle_green),
-                autonomous
+                autonomous,
+                pusherCount,
+                color(R.color.pusher_blue)
         );
     }
 
     /**
-     * Creates a fresh Auto game and starts its frame loop.
+     * Starts an Auto board with every Pusher purchased so far.
+     *
+     * @param pusherCount number of purchased Pushers to place on the board
      */
-    public void startAutonomousGame() {
+    public void startAutonomousGame(int pusherCount) {
         if (getWidth() == 0 || getHeight() == 0) {
             return;
         }
 
         float targetRadius = calculateTargetRadius();
-        game = createGame(targetRadius, true);
+        game = createGame(targetRadius, true, pusherCount);
         resumeAutonomousGame();
         invalidate();
     }
@@ -182,7 +192,7 @@ public class GameBoardView extends View {
             return;
         }
 
-        game.draw(canvas, paint);
+        game.draw(canvas, paint, SystemClock.elapsedRealtime());
     }
 
     /**
@@ -292,4 +302,23 @@ public class GameBoardView extends View {
             postOnAnimation(this);
         }
     };
+
+    /**
+     * Synchronizes the active game with the updated total of purchased Pushers.
+     * Only missing Pusher objects are added; existing ones are preserved.
+     *
+     * @param pusherCount total number of purchased Pushers
+     */
+    public void setPusherCount(int pusherCount) {
+        if (game == null) {
+            return;
+        }
+        game.setPusherCount(
+                pusherCount,
+                getWidth(),
+                getHeight(),
+                color(R.color.pusher_blue)
+        );
+        invalidate();
+    }
 }

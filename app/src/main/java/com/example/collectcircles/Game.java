@@ -30,6 +30,9 @@ public class Game {
     // Stores partial spawn progress until it reaches one complete circle.
     private double spawnProgress;
 
+
+    private final List<Pusher> pushers = new ArrayList<>();
+
     /**
      * יוצר משחק חדש וממקם בו מטרה ועיגולים אקראיים.
      *
@@ -41,13 +44,27 @@ public class Game {
      * @param crossStrokeWidth עובי קווי הצלב
      * @param circleColor צבע העיגולים שאוספים
      */
+    /**
+     * Creates a game and restores its purchased Pushers only in Auto mode.
+     *
+     * @param autonomous whether this is an endless Auto game
+     * @param pusherCount number of purchased Pushers to restore
+     * @param pusherColor color used to draw the Pushers
+     */
 
     /**
      * Creates a timed or Auto game with the correct number of starting circles.
      */
     public Game(float boardWidth, float boardHeight, float targetRadius,
                 int targetColor, int crossColor, float crossStrokeWidth,
-                int circleColor, boolean autonomous) {
+                int circleColor, boolean autonomous, int pusherCount,
+                int pusherColor) {
+
+        if (autonomous) {
+            setPusherCount(pusherCount, boardWidth, boardHeight, pusherColor);
+        }
+
+
         // Keep the selected mode for update() and isFinished().
         this.autonomous = autonomous;
         target = new Target(
@@ -66,15 +83,20 @@ public class Game {
     }
 
     /**
-     * מצייר את המטרה ואת כל העיגולים שעדיין נמצאים במשחק.
+     * מצייר את המשחק ואת ה־Pushers לפי שעון אנימציה משותף.
      *
      * @param canvas משטח הציור
      * @param paint הגדרות הצבע והסגנון שישמשו לציור
+     * @param animationTimeMillis זמן אנימציה מונוטוני באלפיות שנייה
      */
-    public void draw(Canvas canvas, Paint paint) {
+    public void draw(Canvas canvas, Paint paint,
+                     long animationTimeMillis) {
         target.draw(canvas, paint);
         for (Circle circle : circles) {
             circle.draw(canvas, paint);
+        }
+        for (Pusher pusher : pushers) {
+            pusher.draw(canvas, paint, animationTimeMillis);
         }
     }
 
@@ -178,7 +200,7 @@ public class Game {
         }
     }
     /**
-     * מעדכן את יצירת העיגולים במצב Auto לפי הזמן שעבר ומגבלת הלוח.
+     * מעדכן את יצירת העיגולים במצב Auto ומקדם את כל ה־Pushers.
      *
      * @param elapsedSeconds הזמן שעבר מאז העדכון הקודם, בשניות
      * @param boardWidth רוחב לוח המשחק בפיקסלים
@@ -199,6 +221,10 @@ public class Game {
 
         if (circles.size() == MAX_CIRCLE_COUNT) {
             spawnProgress = Math.min(spawnProgress, 1.0);
+        }
+        // Advance each Pusher by the same elapsed frame time.
+        for (Pusher pusher : pushers) {
+            pusher.update(elapsedSeconds, boardWidth);
         }
     }
 
@@ -237,5 +263,40 @@ public class Game {
      */
     private float randomCoordinate(float minimum, float maximum) {
         return minimum + random.nextFloat() * (maximum - minimum);
+    }
+
+
+
+
+    /**
+     * Adds missing Pushers without recreating workers already on the board.
+     *
+     * @param requestedCount total number of Pushers that should exist
+     * @param boardWidth current board width, in pixels
+     * @param boardHeight current board height, in pixels
+     * @param pusherColor color used to draw newly created Pushers
+     */
+    public void setPusherCount(int requestedCount, float boardWidth,
+                               float boardHeight, int pusherColor) {
+        if (!autonomous) {
+            return;
+        }
+
+        float pusherHeight = target.getRadius() * 0.75f;
+        while (pushers.size() < requestedCount) {
+            int index = pushers.size();
+            float usableWidth = Math.max(1f, boardWidth - pusherHeight);
+            float x = pusherHeight / 2f
+                    + (index * pusherHeight * 1.4f) % usableWidth;
+            float y = boardHeight
+                    - pusherHeight * (0.65f + index % 3);
+            pushers.add(new Pusher(
+                    x,
+                    y,
+                    pusherHeight,
+                    pusherColor,
+                    index * 90L
+            ));
+        }
     }
 }

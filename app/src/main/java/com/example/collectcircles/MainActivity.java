@@ -141,6 +141,9 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
                 if (gameProgress.buyPusher()) {
                     showProgress();
+
+                    // Sync the active board with the updated saved Pusher count.
+                    binding.gameBoard.setPusherCount(gameProgress.getPusherCount());
                     Toast.makeText(this, R.string.pusher_hired, Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 }
@@ -165,7 +168,7 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
             // Wait until GameBoardView has valid width and height measurements.
             binding.gameBoard.post(() -> {
                 if (gameProgress.isAutonomousMode()) {
-                    binding.gameBoard.startAutonomousGame();
+                    binding.gameBoard.startAutonomousGame(gameProgress.getPusherCount());
                 }
             });
         } else {
