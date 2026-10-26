@@ -60,9 +60,7 @@ public class Game {
                 int circleColor, boolean autonomous, int pusherCount,
                 int pusherColor) {
 
-        if (autonomous) {
-            setPusherCount(pusherCount, boardWidth, boardHeight, pusherColor);
-        }
+
 
 
         // Keep the selected mode for update() and isFinished().
@@ -80,6 +78,9 @@ public class Game {
                 ? AUTONOMOUS_STARTING_CIRCLE_COUNT
                 : TIMED_CIRCLE_COUNT;
         createCircles(startingCircleCount, boardWidth, boardHeight, circleColor);
+        if (autonomous) {
+            setPusherCount(pusherCount, boardWidth, boardHeight, pusherColor);
+        }
     }
 
     /**
