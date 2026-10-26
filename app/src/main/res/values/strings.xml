@@ -31,4 +31,12 @@
     <string name="local_notification_short">Local notification</string>
     <string name="autonomous_mode">Auto</string>
     <string name="autonomous_time">Time: autonomous</string>
+
+    <string name="local_notification_tiny">Local</string>
+    <string name="shop">Shop</string>
+    <string name="shop_title">Pusher shop</string>
+    <string name="shop_message">Pushers: %1$d\nCircles: %2$d\nNext pusher: %3$d circles</string>
+    <string name="hire_pusher">Hire pusher</string>
+    <string name="close">Close</string>
+    <string name="pusher_hired">Pusher hired!</string>
 </resources>

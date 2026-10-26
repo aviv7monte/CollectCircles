@@ -22,6 +22,8 @@ public class GameProgress {
     // Cached mode used by the current screen.
     private boolean autonomousMode;
 
+
+    static final long FIRST_PUSHER_PRICE = 64;
     public GameProgress(SharedPreferences preferences) {
         this.preferences = preferences;
 
@@ -84,4 +86,88 @@ public class GameProgress {
                 .putLong(LIFETIME_CIRCLES_KEY, lifetimeCircles)
                 .apply();
     }
+
+
+
+
+
+
+    /**
+     * Calculates the price for a given number of owned Pushers.
+     *
+     * @param pusherCount number of Pushers already owned
+     * @return the next price, or {@link Long#MAX_VALUE} before overflow
+     * @throws IllegalArgumentException if pusherCount is negative
+     */
+    static long priceForPusherCount(int pusherCount) {
+        if (pusherCount < 0) {
+            throw new IllegalArgumentException("pusherCount cannot be negative");
+        }
+        if (pusherCount >= 57) {
+            return Long.MAX_VALUE;
+        }
+        return FIRST_PUSHER_PRICE << pusherCount; // bit shift multiplication
+    }
+
+    /**
+     * Returns the price that follows the number of Pushers already owned.
+     *
+     * @return the price of the next Pusher
+     */
+    public long getNextPusherPrice() {
+        return priceForPusherCount(pusherCount);
+    }
+
+
+
+    /**
+     * Checks affordability without changing the saved progress.
+     *
+     * @return true when the balance can cover the next Pusher's price
+     */
+    public boolean canBuyPusher() {
+        return circlesBalance >= getNextPusherPrice();
+    }
+
+
+
+
+
+    /**
+     * Buys one Pusher when the balance can cover its current price.
+     *
+     * @return true when the purchase succeeds; false when the balance is too low
+     */
+    public boolean buyPusher() {
+        long price = getNextPusherPrice();
+        if (circlesBalance < price) {
+            return false;
+        }
+
+        circlesBalance -= price;
+        pusherCount++;
+
+        preferences.edit()
+                .putLong(CIRCLES_BALANCE_KEY, circlesBalance)
+                .putInt(PUSHER_COUNT_KEY, pusherCount)
+                .apply();
+        return true;
+    }
+
+    /**
+     * Records one collected circle in both the spendable and lifetime totals.
+
+    public void recordCollectedCircle() {
+        if (circlesBalance < Long.MAX_VALUE) {
+            circlesBalance++;
+        }
+        if (lifetimeCircles < Long.MAX_VALUE) {
+            lifetimeCircles++;
+        }
+
+        preferences.edit()
+                .putLong(CIRCLES_BALANCE_KEY, circlesBalance)
+                .putLong(LIFETIME_CIRCLES_KEY, lifetimeCircles)
+                .apply();
+    }*/
 }

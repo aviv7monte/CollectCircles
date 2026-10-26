@@ -50,5 +50,16 @@ public class ExampleUnitTest {
     }
 
 
+    /**
+     * Verifies that prices double and stop safely before long overflow.
+     */
+    @Test
+    public void pusherPricesDoubleWithoutOverflowing() {
+        assertEquals(64, GameProgress.priceForPusherCount(0));
+        assertEquals(128, GameProgress.priceForPusherCount(1));
+        assertEquals(256, GameProgress.priceForPusherCount(2));
+        assertEquals(Long.MAX_VALUE, GameProgress.priceForPusherCount(57));
+    }
+
 }
 

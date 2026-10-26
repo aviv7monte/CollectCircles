@@ -8,6 +8,7 @@ import android.Manifest;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -48,9 +49,7 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
-        }
-
-        );
+        });
 
         // ממשיכים בתוך onCreate, אבל מחוץ ל-listener של ה-insets.
         // החל מ-Android 13 צריך אישור מפורש כדי להציג התראות.
@@ -104,6 +103,7 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
         binding.gameBoard.setOnCircleCollectedListener(this::recordCollectedCircle);
         binding.gameBoard.setOnGameFinishedListener(this::finishGame);
 
+        binding.shopButton.setOnClickListener(view -> showPusherShop());
 
 
         // Persist mode changes and immediately rebuild the game screen.
@@ -117,6 +117,38 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
     }
 
 
+
+
+    /**
+     * Opens the shop and handles the purchase of one Pusher.
+     */
+    private void showPusherShop() {
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.shop_title)
+                .setMessage(getString(
+                        R.string.shop_message,
+                        gameProgress.getPusherCount(),
+                        gameProgress.getCirclesBalance(),
+                        gameProgress.getNextPusherPrice()
+                ))
+                .setNegativeButton(R.string.close, null)
+                .setPositiveButton(R.string.hire_pusher, null)
+                .create();
+
+        dialog.setOnShowListener(ignored -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                    .setEnabled(gameProgress.canBuyPusher());
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+                if (gameProgress.buyPusher()) {
+                    showProgress();
+                    Toast.makeText(this, R.string.pusher_hired, Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }
+            });
+        });
+
+        dialog.show();
+    }
     /**
      * Stops the previous mode and configures the selected game mode.
      */
