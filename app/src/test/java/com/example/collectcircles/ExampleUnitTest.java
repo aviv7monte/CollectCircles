@@ -59,17 +59,18 @@ public class ExampleUnitTest {
         assertEquals(256, GameProgress.priceForPusherCount(2));
         assertEquals(Long.MAX_VALUE, GameProgress.priceForPusherCount(57));
     }
-    /**
-     * Verifies that a long frame turns a Pusher around at the right edge.
-     */
+    /** Verifies that one Pusher completes exactly one five-second task. */
     @Test
-    public void pusherTurnsAroundAndStaysInsideTheBoard() {
-        Pusher pusher = new Pusher(90, 50, 40, 0, 0);
+    public void pusherCompletesOneCircleAfterFiveSeconds() {
+        Pusher pusher = new Pusher(20, 20, 40, 0, 0);
+        Circle circle = new Circle(100, 100, 20, 0);
+        Target target = new Target(200, 200, 50, 0, 0, 1);
 
-        pusher.update(10, 100);
-
-        assertTrue(pusher.getCenterX() <= 90);
-        assertEquals(-1, pusher.getDirection());
+        assertTrue(pusher.assign(circle, target));
+        assertNull(pusher.update(4.9));
+        assertSame(circle, pusher.update(0.1));
+        assertEquals(target.getCenterX(), circle.getCenterX(), 0.001);
+        assertEquals(target.getCenterY(), circle.getCenterY(), 0.001);
     }
 
 }

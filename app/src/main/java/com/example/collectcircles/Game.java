@@ -31,6 +31,14 @@ public class Game {
     private double spawnProgress;
 
 
+    // Keep autonomous mode alive even before the first Pusher is purchased.
+    private static final double BASE_SPAWN_RATE = 0.20;
+
+    // Spawn 10% faster than the workers' known maximum production rate.
+    private static final double SPAWN_RATE_PER_PUSHER =
+            Pusher.CIRCLES_PER_SECOND * 1.10;
+
+
     private final List<Pusher> pushers = new ArrayList<>();
 
     /**
@@ -83,6 +91,14 @@ public class Game {
         }
     }
 
+
+
+
+    /** @return current circle spawn rate per second */
+    private double getSpawnRate() {
+        return Math.max(BASE_SPAWN_RATE, pushers.size() * SPAWN_RATE_PER_PUSHER);
+    }
+
     /**
      * מצייר את המשחק ואת ה־Pushers לפי שעון אנימציה משותף.
      *
@@ -112,6 +128,7 @@ public class Game {
         for (int i = circles.size() - 1; i >= 0; i--) {
             Circle circle = circles.get(i);
             if (circle.contains(x, y)) {
+                cancelPusherAssignment(circle);
                 selectedCircle = circle;
                 return true;
             }
@@ -119,6 +136,16 @@ public class Game {
 
         selectedCircle = null;
         return false;
+    }
+    /**
+     * Releases a circle from any Pusher before the user starts dragging it.
+     *
+     * @param circle circle selected by the user
+     */
+    private void cancelPusherAssignment(Circle circle) {
+        for (Pusher pusher : pushers) {
+            pusher.cancelAssignment(circle);
+        }
     }
 
     /**
@@ -203,19 +230,21 @@ public class Game {
     /**
      * מעדכן את יצירת העיגולים במצב Auto ומקדם את כל ה־Pushers.
      *
+     * Advances autonomous mode and lets every Pusher perform one frame of work.
      * @param elapsedSeconds הזמן שעבר מאז העדכון הקודם, בשניות
      * @param boardWidth רוחב לוח המשחק בפיקסלים
      * @param boardHeight גובה לוח המשחק בפיקסלים
      * @param circleColor צבע העיגולים החדשים
+      * @return number of circles completed by Pushers during this frame
      */
-    public void update(double elapsedSeconds, float boardWidth,
-                       float boardHeight, int circleColor) {
+ public int update(double elapsedSeconds, float boardWidth,
+                  float boardHeight, int circleColor) {
         if (!autonomous) {
-            return;
+                   return 0;
         }
 
-        spawnProgress += elapsedSeconds * AUTONOMOUS_SPAWN_RATE;
-        while (spawnProgress >= 1.0 && circles.size() < MAX_CIRCLE_COUNT) {
+         spawnProgress += elapsedSeconds * getSpawnRate();
+     while (spawnProgress >= 1.0 && circles.size() < MAX_CIRCLE_COUNT) {
             createCircles(circles.size() + 1, boardWidth, boardHeight, circleColor);
             spawnProgress -= 1.0;
         }
@@ -224,10 +253,54 @@ public class Game {
             spawnProgress = Math.min(spawnProgress, 1.0);
         }
         // Advance each Pusher by the same elapsed frame time.
-        for (Pusher pusher : pushers) {
-            pusher.update(elapsedSeconds, boardWidth);
+         int collectedCount = 0;
+     for (Pusher pusher : pushers) {
+                 assignCircleIfNeeded(pusher);
+                 Circle completed = pusher.update(elapsedSeconds);
+                if (completed != null && circles.remove(completed)) {
+                         collectedCount++;
+                    }
+        }
+     return collectedCount;
+    }
+
+
+
+
+    /**
+     * Assigns the first available circle when a Pusher is idle.
+     *
+     * @param pusher worker that may need a new assignment
+     */
+    private void assignCircleIfNeeded(Pusher pusher) {
+        if (pusher.hasAssignment()) {
+            return;
+        }
+
+        // Skip the user's circle and every circle owned by another Pusher.
+        for (Circle circle : circles) {
+            if (circle != selectedCircle && !isAssigned(circle)) {
+                pusher.assign(circle, target);
+                return;
+            }
         }
     }
+
+    /**
+     * Checks whether another Pusher already owns a circle.
+     *
+     * @param circle circle being considered for assignment
+     * @return true when the circle is already assigned
+     */
+    private boolean isAssigned(Circle circle) {
+        for (Pusher pusher : pushers) {
+            if (pusher.isAssignedTo(circle)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 
     /**

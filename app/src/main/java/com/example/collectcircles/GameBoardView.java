@@ -297,7 +297,19 @@ private Game createGame(float targetRadius, boolean autonomous,
             double elapsedSeconds = (nowMillis - previousFrameMillis) / 1000.0;
             previousFrameMillis = nowMillis;
 
-            game.update(elapsedSeconds, getWidth(), getHeight(), color(R.color.circle_green));
+            int collectedCount = game.update(
+                    elapsedSeconds,
+                    getWidth(),
+                    getHeight(),
+                    color(R.color.circle_green)
+            );
+
+            // Report automatic collections through the same callback as manual ones.
+            for (int i = 0; i < collectedCount; i++) {
+                if (onCircleCollected != null) {
+                    onCircleCollected.run();
+                }
+            }
             invalidate();
             postOnAnimation(this);
         }
