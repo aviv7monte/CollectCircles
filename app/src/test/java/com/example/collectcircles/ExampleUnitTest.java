@@ -73,5 +73,23 @@ public class ExampleUnitTest {
         assertEquals(target.getCenterY(), circle.getCenterY(), 0.001);
     }
 
+
+    /** Verifies rate limiting, whole-circle output, and saved fractions. */
+    @Test
+    public void offlineProgressUsesTheSlowerRateAndKeepsFractions() {
+        OfflineProgressCalculator.Result onePusher =
+                OfflineProgressCalculator.calculate(12_000, 1, 0);
+        assertEquals(2, onePusher.getWholeCircles());
+        assertEquals(0.4, onePusher.getFraction(), 0.0001);
+
+        OfflineProgressCalculator.Result twoPushers =
+                OfflineProgressCalculator.calculate(10_000, 2, 0);
+        assertEquals(4, twoPushers.getWholeCircles());
+
+        OfflineProgressCalculator.Result noPushers =
+                OfflineProgressCalculator.calculate(60_000, 0, 0);
+        assertEquals(0, noPushers.getWholeCircles());
+    }
+
 }
 

@@ -38,6 +38,8 @@ public class    MainActivity extends AppCompatActivity {
 
     private GameProgress gameProgress;
 
+    private boolean enteredBackground;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -357,14 +359,51 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
     protected void onStart() {
         super.onStart();
         // Resume only the loop that belongs to the selected game mode.
+        long offlineCircles = gameProgress.settleOfflineProgress(
+                       System.currentTimeMillis()
+                        );
+        showProgress();
+        showOfflineProgress(offlineCircles);
+
+
         if (gameProgress.isAutonomousMode()) {
-            binding.gameBoard.resumeAutonomousGame();
+                if (enteredBackground) {
+                        startFreshAutonomousBoard();
+                    } else {
+                binding.gameBoard.resumeAutonomousGame();
+                    }
         } else if (gameRunning) {
-            binding.elapsedTimeText.removeCallbacks(timerUpdate);
             timerUpdate.run();
         }
+        enteredBackground = false;
+
     }
 
+
+    /**
+     * Shows a message when at least one whole offline circle was collected.
+     *
+     * @param collectedCircles number of whole circles collected offline
+     */
+    private void showOfflineProgress(long collectedCircles) {
+        if (collectedCircles <= 0) {
+            return;
+        }
+        Toast.makeText(
+                this,
+                getString(R.string.offline_progress_message, collectedCircles),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    /** Rebuilds the autonomous board after the View has been measured. */
+    private void startFreshAutonomousBoard() {
+        binding.gameBoard.post(() -> {
+            if (gameProgress.isAutonomousMode()) {
+                binding.gameBoard.startAutonomousGame(gameProgress.getPusherCount());
+            }
+        });
+    }
     /**
      * Stops both update loops while the Activity is not visible.
      */
@@ -372,6 +411,9 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
     protected void onStop() {
         binding.elapsedTimeText.removeCallbacks(timerUpdate);
         binding.gameBoard.pauseAutonomousGame();
+        gameProgress.markBackgroundStarted(System.currentTimeMillis());
+        enteredBackground = true;
+
         super.onStop();
     }
 }

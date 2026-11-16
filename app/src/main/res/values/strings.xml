@@ -39,4 +39,7 @@
     <string name="hire_pusher">Hire pusher</string>
     <string name="close">Close</string>
     <string name="pusher_hired">Pusher hired!</string>
+
+
+    <string name="offline_progress_message">While you were away, your pushers collected %1$d circles.</string>
 </resources>

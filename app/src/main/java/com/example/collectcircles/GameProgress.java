@@ -21,7 +21,11 @@ public class GameProgress {
 
     // Cached mode used by the current screen.
     private boolean autonomousMode;
+    private static final String LAST_PROGRESS_UPDATE_KEY = "last_progress_update";
+    private static final String FRACTIONAL_PROGRESS_KEY = "fractional_progress";
 
+    private long lastProgressUpdateMillis;
+    private double fractionalProgress;
 
     static final long FIRST_PUSHER_PRICE = 64;
     public GameProgress(SharedPreferences preferences) {
@@ -35,6 +39,17 @@ public class GameProgress {
 
 
         autonomousMode = preferences.getBoolean(AUTONOMOUS_MODE_KEY, false);
+
+        lastProgressUpdateMillis = preferences.getLong(
+                LAST_PROGRESS_UPDATE_KEY,
+                System.currentTimeMillis()
+        );
+        fractionalProgress = Double.longBitsToDouble(
+                preferences.getLong(
+                        FRACTIONAL_PROGRESS_KEY,
+                        Double.doubleToRawLongBits(0)
+                )
+        );
     }
 
 
@@ -72,21 +87,40 @@ public class GameProgress {
 
     // מעדכן את שני המונים לאחר שהשחקן אסף עיגול אחד.
     public void recordCollectedCircle() {
-        // עוצרים בערך הגדול ביותר כדי שהמונה לא יגלוש למספר שלילי.
-        if (circlesBalance < Long.MAX_VALUE) {
-            circlesBalance++;
-        }
-        if (lifetimeCircles < Long.MAX_VALUE) {
-            lifetimeCircles++;
+        recordCollectedCircles(1);
+    }
+
+    /**
+     * Adds several collected circles without overflowing either total.
+     *
+     * @param count number of circles to add
+     */
+    public void recordCollectedCircles(long count) {
+        if (count <= 0) {
+            return;
         }
 
-        // שומרים את הערכים החדשים במכשיר; apply מבצע את הכתיבה ברקע.
+        circlesBalance = addWithSaturation(circlesBalance, count);
+        lifetimeCircles = addWithSaturation(lifetimeCircles, count);
         preferences.edit()
                 .putLong(CIRCLES_BALANCE_KEY, circlesBalance)
                 .putLong(LIFETIME_CIRCLES_KEY, lifetimeCircles)
                 .apply();
     }
 
+    /**
+     * Adds two non-negative values and stops at the largest long value.
+     *
+     * @param current current stored value
+     * @param addition non-negative amount to add
+     * @return the sum, or Long.MAX_VALUE if the sum would overflow
+     */
+    private long addWithSaturation(long current, long addition) {
+        if (Long.MAX_VALUE - current < addition) {
+            return Long.MAX_VALUE;
+        }
+        return current + addition;
+    }
 
 
 
@@ -170,4 +204,56 @@ public class GameProgress {
                 .putLong(LIFETIME_CIRCLES_KEY, lifetimeCircles)
                 .apply();
     }*/
+
+
+    /**
+     * Applies progress earned since the last saved wall-clock timestamp.
+     *
+     * @param nowMillis current wall-clock time, in milliseconds
+     * @return number of whole circles added to the progress totals
+     */
+    public long settleOfflineProgress(long nowMillis) {
+        long elapsedMillis = Math.max(0, nowMillis - lastProgressUpdateMillis);
+        lastProgressUpdateMillis = nowMillis;
+
+        long collectedCircles = 0;
+        if (autonomousMode && pusherCount > 0) {
+            OfflineProgressCalculator.Result result =
+                    OfflineProgressCalculator.calculate(
+                            elapsedMillis,
+                            pusherCount,
+                            fractionalProgress
+                    );
+            collectedCircles = result.getWholeCircles();
+            fractionalProgress = result.getFraction();
+            circlesBalance = addWithSaturation(circlesBalance, collectedCircles);
+            lifetimeCircles = addWithSaturation(lifetimeCircles, collectedCircles);
+        }
+
+        preferences.edit()
+                .putLong(CIRCLES_BALANCE_KEY, circlesBalance)
+                .putLong(LIFETIME_CIRCLES_KEY, lifetimeCircles)
+                .putLong(LAST_PROGRESS_UPDATE_KEY, lastProgressUpdateMillis)
+                .putLong(
+                        FRACTIONAL_PROGRESS_KEY,
+                        Double.doubleToRawLongBits(fractionalProgress)
+                )
+                .apply();
+        return collectedCircles;
+    }
+
+    /**
+     * Saves the moment from which the next offline period will be measured.
+     *
+     * @param nowMillis current wall-clock time, in milliseconds
+     */
+    public void markBackgroundStarted(long nowMillis) {
+        lastProgressUpdateMillis = nowMillis;
+        preferences.edit()
+                .putLong(LAST_PROGRESS_UPDATE_KEY, nowMillis)
+                .apply();
+    }
+
+
+
 }

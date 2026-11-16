@@ -243,7 +243,7 @@ public class Game {
                    return 0;
         }
 
-         spawnProgress += elapsedSeconds * getSpawnRate();
+     spawnProgress += elapsedSeconds * ProductionRates.spawnRate(pushers.size());
      while (spawnProgress >= 1.0 && circles.size() < MAX_CIRCLE_COUNT) {
             createCircles(circles.size() + 1, boardWidth, boardHeight, circleColor);
             spawnProgress -= 1.0;
