@@ -21,7 +21,11 @@ public class CircleMessagingService extends FirebaseMessagingService {
         // endpoint שני: notification payload. ברקע FCM מציג אותו בעצמו;
         // בחזית הוא מגיע לכאן ואנו מציגים את אותה התראה קבועה.
         if (message.getNotification() != null) {
-            Notifications.show(this);
+            Notifications.showRemote(
+                    this,
+                    message.getNotification().getTitle(),
+                    message.getNotification().getBody()
+            );
         }
     }
 

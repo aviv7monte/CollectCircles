@@ -11,6 +11,7 @@ public final class Notifications {
     private static final int NOTIFICATION_ID = 1;
     private static final int PUSHER_NOTIFICATION_ID = 2;
 
+    private static final int REMOTE_NOTIFICATION_ID = 3;
     private Notifications() {
         // זוהי מחלקת עזר בלבד. אין צורך ליצור ממנה אובייקטים.
     }
@@ -96,5 +97,34 @@ public final class Notifications {
                 NotificationManager.class
         );
         return manager.areNotificationsEnabled();
+    }
+
+
+    /**
+     * Shows notification text supplied by the trusted classroom function.
+     *
+     * @param context context used to access NotificationManager
+     * @param title notification title supplied through FCM
+     * @param body notification body supplied through FCM
+     */
+    public static void showRemote(
+            Context context,
+            String title,
+            String body
+    ) {
+        createChannel(context);
+        NotificationManager manager = context.getSystemService(
+                NotificationManager.class
+        );
+        Notification notification = new Notification.Builder(
+                context,
+                CHANNEL_ID
+        )
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setAutoCancel(true)
+                .build();
+        manager.notify(REMOTE_NOTIFICATION_ID, notification);
     }
 }

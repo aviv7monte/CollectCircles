@@ -47,4 +47,6 @@
     <string name="pusher_available_text">You have enough circles for the next pusher (%1$d).</string>
     <string name="pusher_check_scheduled">Pusher check scheduled</string>
     <string name="check_pusher">Check</string>
+    <string name="brag_sent">Brag sent!</string>
+    <string name="brag_failed">Pusher hired, but the brag could not be sent</string>
 </resources>

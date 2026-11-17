@@ -22,6 +22,9 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class    MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
@@ -86,6 +89,7 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
                 MODE_PRIVATE
         );
         gameProgress = GameProgress.load(this);
+        PusherWorkScheduler.schedule(this);
         bestTimeMillis = preferences.getLong(
                 BEST_TIME_KEY,
                 NO_BEST_TIME
@@ -160,6 +164,7 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
                     // Sync the active board with the updated saved Pusher count.
                     binding.gameBoard.setPusherCount(gameProgress.getPusherCount());
                     Toast.makeText(this, R.string.pusher_hired, Toast.LENGTH_SHORT).show();
+                    sendPusherBrag();
                     dialog.dismiss();
                 }
             });
@@ -193,6 +198,28 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
         }
     }
 
+
+    /** Sends the latest Pusher achievement to the teacher-owned function. */
+    private void sendPusherBrag() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("name", "A player");
+        data.put("pusherCount", gameProgress.getPusherCount());
+        data.put("lifetimeCircles", gameProgress.getLifetimeCircles());
+
+        FirebaseFunctions.getInstance()
+                .getHttpsCallable("sendPusherBrag")
+                .call(data)
+                .addOnCompleteListener(task -> {
+                    int message = task.isSuccessful()
+                            ? R.string.brag_sent
+                            : R.string.brag_failed;
+                    Toast.makeText(
+                            this,
+                            message,
+                            Toast.LENGTH_SHORT
+                    ).show();
+                });
+    }
 
     /** Enqueues one background eligibility check and confirms its scheduling. */
     private void enqueuePusherCheck() {

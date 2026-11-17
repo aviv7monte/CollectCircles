@@ -171,13 +171,37 @@ public class GameProgress {
 
 
 
+
     /**
-     * Checks affordability without changing the saved progress.
+
+     + * Checks whether the balance, including theoretical offline progress,
+     + * can cover the next Pusher's price.
      *
-     * @return true when the balance can cover the next Pusher's price
+
+     + * @return true when the theoretical current balance is large enough
      */
     public boolean canBuyPusher() {
-        return circlesBalance >= getNextPusherPrice();
+
+            long projectedBalance = circlesBalance;
+
+                    if (autonomousMode && pusherCount > 0) {
+                    long elapsedMillis = Math.max(
+                                    0,
+                                    System.currentTimeMillis() - lastProgressUpdateMillis
+                                    );
+                    OfflineProgressCalculator.Result result =
+                                    OfflineProgressCalculator.calculate(
+                                                    elapsedMillis,
+                                                    pusherCount,
+                                                    fractionalProgress
+                                                    );
+                    projectedBalance = addWithSaturation(
+                                    circlesBalance,
+                                    result.getWholeCircles()
+                                    );
+                }
+
+                    return projectedBalance >= getNextPusherPrice();
     }
 
 
