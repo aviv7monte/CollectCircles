@@ -1,5 +1,6 @@
 package com.example.collectcircles;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 
 public class GameProgress {
@@ -27,6 +28,8 @@ public class GameProgress {
     private long lastProgressUpdateMillis;
     private double fractionalProgress;
 
+    static final String PREFERENCES_NAME = "collect_circles_preferences";
+
     static final long FIRST_PUSHER_PRICE = 64;
     public GameProgress(SharedPreferences preferences) {
         this.preferences = preferences;
@@ -52,6 +55,20 @@ public class GameProgress {
         );
     }
 
+
+    /**
+     * Loads the shared game progress used by Activities and Workers.
+     *
+     * @param context context used to open the SharedPreferences file
+     * @return game progress backed by the shared preferences
+     */
+    public static GameProgress load(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(
+                PREFERENCES_NAME,
+                Context.MODE_PRIVATE
+        );
+        return new GameProgress(preferences);
+    }
 
     /**
      * Returns the game mode currently selected by the player.

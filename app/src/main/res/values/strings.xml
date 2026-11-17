@@ -42,4 +42,9 @@
 
 
     <string name="offline_progress_message">While you were away, your pushers collected %1$d circles.</string>
+
+    <string name="pusher_available_title">A new pusher is available!</string>
+    <string name="pusher_available_text">You have enough circles for the next pusher (%1$d).</string>
+    <string name="pusher_check_scheduled">Pusher check scheduled</string>
+    <string name="check_pusher">Check</string>
 </resources>

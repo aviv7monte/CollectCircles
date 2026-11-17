@@ -18,7 +18,8 @@ import com.example.collectcircles.databinding.ActivityMainBinding;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
 import com.google.firebase.functions.FirebaseFunctions;
-
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class    MainActivity extends AppCompatActivity {
@@ -60,7 +61,7 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
                 permissionGranted -> {     // callback כאן מוצהר מנגנון
                     // זוהי פונקציה אנונימית - קטע קוד ללא שם - שאנחנו מבקשים שירוץ
                     if (permissionGranted) {
-                        Notifications.show(this);
+                        enqueuePusherCheck();
                     } else {
                         Toast.makeText(
                                 this,
@@ -81,10 +82,10 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
 
         // ממשיכים בתוך onCreate, אבל מחוץ ל-listener של ה-insets.
         preferences = getSharedPreferences(
-                PREFERENCES_NAME,
+                GameProgress.PREFERENCES_NAME,
                 MODE_PRIVATE
         );
-        gameProgress = new GameProgress(preferences);
+        gameProgress = GameProgress.load(this);
         bestTimeMillis = preferences.getLong(
                 BEST_TIME_KEY,
                 NO_BEST_TIME
@@ -99,7 +100,7 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
 
         binding.startButton.setOnClickListener(view -> startGame());
         binding.localNotifButton.setOnClickListener(
-                view -> requestPermissionAndShowNotification()
+                view -> requestPermissionAndCheckPusher()
         );
         binding.inviteButton.setOnClickListener(view -> sendInvite());
         binding.gameBoard.setOnCircleCollectedListener(this::recordCollectedCircle);
@@ -119,7 +120,19 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
     }
 
 
+    /** Requests notification permission when needed, then schedules the check. */
+    private void requestPermissionAndCheckPusher() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionLauncher.launch(
+                    Manifest.permission.POST_NOTIFICATIONS
+            );
+            return;
+        }
 
+        enqueuePusherCheck();
+    }
 
     /**
      * Opens the shop and handles the purchase of one Pusher.
@@ -181,7 +194,20 @@ binding = ActivityMainBinding.inflate(getLayoutInflater());
     }
 
 
+    /** Enqueues one background eligibility check and confirms its scheduling. */
+    private void enqueuePusherCheck() {
+        OneTimeWorkRequest request =
+                new OneTimeWorkRequest.Builder(
+                        PusherEligibilityWorker.class
+                ).build();
 
+        WorkManager.getInstance(this).enqueue(request);
+        Toast.makeText(
+                this,
+                R.string.pusher_check_scheduled,
+                Toast.LENGTH_SHORT
+        ).show();
+    }
     private void recordCollectedCircle() {
         gameProgress.recordCollectedCircle();
         showProgress();

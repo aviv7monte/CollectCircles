@@ -9,6 +9,7 @@ public final class Notifications {
 
     private static final String CHANNEL_ID = "circle_invitations";
     private static final int NOTIFICATION_ID = 1;
+    private static final int PUSHER_NOTIFICATION_ID = 2;
 
     private Notifications() {
         // זוהי מחלקת עזר בלבד. אין צורך ליצור ממנה אובייקטים.
@@ -44,5 +45,56 @@ public final class Notifications {
                 .build();
 
         manager.notify(NOTIFICATION_ID, notification);
+    }
+
+
+
+
+    /**
+     * Shows a notification that the player can afford the next Pusher.
+     *
+     * @param context application or Activity context
+     * @param price price displayed in the notification
+     */
+    public static void showPusherAvailable(
+            Context context,
+            long price
+    ) {
+        createChannel(context);
+        NotificationManager manager = context.getSystemService(
+                NotificationManager.class
+        );
+        Notification notification = new Notification.Builder(
+                context,
+                CHANNEL_ID
+        )
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(context.getString(
+                        R.string.pusher_available_title
+                ))
+                .setContentText(context.getString(
+                        R.string.pusher_available_text,
+                        price
+                ))
+                .setAutoCancel(true)
+                .build();
+
+        manager.notify(PUSHER_NOTIFICATION_ID, notification);
+    }
+
+
+
+
+    /**
+     * Checks whether notifications are currently enabled for the app.
+     *
+     * @param context context used to access NotificationManager
+     * @return true when the app may show notifications
+     */
+    public static boolean canShow(Context context) {
+        NotificationManager manager = context.getSystemService(
+                NotificationManager.class
+        );
+        return manager.areNotificationsEnabled();
     }
 }
